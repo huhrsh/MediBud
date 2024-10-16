@@ -1,7 +1,46 @@
 import React, { useState, useEffect } from 'react';
 
-export default function AppointmentModal({ appointment, handleChange, handleSubmit, handleCancel, isEditing, apiUrl }) {
+export default function AppointmentModal({ appointment, setAppointment,setLoading, handleChange, postSubmit, setShowAppointmentModal, handleCancel, apiUrl }) {
     const [doctors, setDoctors] = useState([]);
+
+    let isEditing= !!appointment.id;
+
+    const handleSubmit = async (e) => {
+        setLoading(true);
+        e.preventDefault();
+        const token = localStorage.getItem('jwtToken');
+        try {
+            if (isEditing) {
+                const response = await fetch(`${apiUrl}appointments/${document.id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(appointment)
+                });
+                const data = await response.json();
+                console.log(data);
+            }
+            else{
+                const response = await fetch(`${apiUrl}appointments`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(appointment),
+                });
+            }
+            postSubmit();
+            setAppointment({ doctorID: null, date: '', time: '' });  
+            setShowAppointmentModal(false);
+        } catch (error) {
+            console.error('Error adding appointment:', error);
+        }
+        setLoading(false);
+
+    };
 
     useEffect(() => {
         const fetchDoctors = async () => {
@@ -31,7 +70,7 @@ export default function AppointmentModal({ appointment, handleChange, handleSubm
     ];
 
     return (
-        <div className='absolute w-screen h-screen top-0 left-0 bg-white bg-opacity-70 flex items-center justify-center animate__animated animate__fadeInDown animate__fast'>
+        <div className='absolute w-screen z-30 h-screen top-0 left-0 bg-white bg-opacity-70 flex items-center justify-center animate__animated animate__fadeInDown animate__fast'>
             <form className='border grid grid-cols-1 w-[36vw] bg-white grid-flow-row gap-3 rounded-2xl p-6' onSubmit={handleSubmit}>
                 <h2 className='font-bold text-3xl text-blue-500 text-transparent bg-clip-text bg-gradient-to-b from-sky-500 to-blue-600'>
                     {isEditing ? 'Edit Appointment' : 'Enter Appointment Details'}

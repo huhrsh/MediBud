@@ -10,7 +10,7 @@ export default function DoctorModal({ doctor, handleChange, handleSubmit, handle
     ];
 
     return (
-        <div className='absolute w-screen h-screen top-0 left-0 bg-white bg-opacity-70 flex items-center justify-center animate__animated animate__fadeInDown animate__fast'>
+        <div className='absolute z-30 w-screen h-screen top-0 left-0 bg-white bg-opacity-70 flex items-center justify-center animate__animated animate__fadeInDown animate__fast'>
             <form className='border grid grid-cols-1 w-[36vw] bg-white grid-flow-row gap-3 rounded-2xl p-6' onSubmit={handleSubmit}>
                 <h2 className='font-bold text-3xl text-blue-500 text-transparent bg-clip-text bg-gradient-to-b from-sky-500 to-blue-600'>
                     {isEditing ? 'Edit Doctor' : 'Enter Doctor Details'}

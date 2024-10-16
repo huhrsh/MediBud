@@ -3,6 +3,8 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { AppContext } from "../AppContext";
 import DoctorModal from "../components/DoctorModal";
 import { toast } from "react-toastify";
+import DocumentModal from "../components/DocumentModal";
+import AppointmentModal from "../components/AppointmentModal";
 
 export default function DoctorDetails() {
     const { id } = useParams();
@@ -13,7 +15,21 @@ export default function DoctorDetails() {
     const [prescriptions, setPrescriptions] = useState([]);
     const [pastAppointments, setPastAppointments] = useState([]);
     const [upcomingAppointments, setUpcomingAppointments] = useState([]);
+    const [showAppointmentModal, setShowAppointmentModal] = useState(false);
+
+    const [appointment, setAppointment] = useState({ doctorID: id, issue: '', documents:[], date: '', time: '' });
     const navigate = useNavigate();
+
+
+    const [document, setDocument] = useState({
+        doctorID: id,
+        type: null,
+        file: null,
+        date: null,
+        injury: null,
+        description: null
+    })
+    const [showDocumentModal, setShowDocumentModal] = useState(false);
 
     const fetchDoctorDetails = async () => {
         setLoading(true);
@@ -90,10 +106,20 @@ export default function DoctorDetails() {
     };
 
     const handleCancel = () => setShowDoctorModal(false);
+    const handleCancelDocument = () => setShowDocumentModal(false);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
         setDoctorDetails((prev) => ({ ...prev, [name]: value }));
+    };
+
+    const handleChangeDocument = (e, field) => {
+        const { name, value, files } = e.target;
+        if (field === 'file') {
+            setDocument((prev) => ({ ...prev, file: files[0] }));
+        } else {
+            setDocument((prev) => ({ ...prev, [name]: value }));
+        }
     };
 
     useEffect(() => {
@@ -132,6 +158,31 @@ export default function DoctorDetails() {
         setLoading(false);
     }
 
+    const handleChangeAppointment = (e) => {
+        const { name, value } = e.target;
+        setAppointment((prev) => ({ ...prev, [name]: value }));
+    };
+
+    const handleCancelAppointment = () => {
+        setShowAppointmentModal(false);
+        setAppointment({ doctorID: id, date: '', time: '' });
+    }
+
+    function handleDocumentAddition(e){
+        e.preventDefault();
+        setDocument((document)=>({...document, doctorID:id}));
+        setShowDocumentModal(true);
+    }
+
+    function handleAppointmentAddition(e){
+        e.preventDefault();
+        setAppointment((appointment)=>({...appointment, doctorID:id}));
+        setShowAppointmentModal(true);
+    }
+
+    function handleDocumentUpdate(e){
+        e.preventDefault();
+    }
 
     const renderAppointmentList = (appointments, title) => (
         <div className="w-1/2 flex flex-col gap-2 ">
@@ -173,7 +224,7 @@ export default function DoctorDetails() {
                                 </div>
                                 <div className='absolute transition-all duration-300 group-hover:top-0 overflow-hidden  top-[100%] w-0  group-hover:w-full h-full group-hover:left-0 left-[50%] flex justify-center items-center gap-4 bg-neutral-50 bg-opacity-95'>
                                     <button onClick={() => window.open(document.fileUrl, '_blank')} className='outline-none w-fit px-4 py-1.5 bg-gradient-to-bl from-sky-500 to-blue-500 text-white rounded-lg shadow hover:shadow-lg transition-all duration-200'>View</button>
-                                    <button className='outline-none w-fit px-4 py-1.5 bg-gradient-to-bl from-sky-600 to-blue-700 text-white rounded-lg shadow hover:shadow-lg transition-all duration-200'>Edit</button>
+                                    <button onClick={(e)=> handleDocumentUpdate(e)} className='outline-none w-fit px-4 py-1.5 bg-gradient-to-bl from-sky-600 to-blue-700 text-white rounded-lg shadow hover:shadow-lg transition-all duration-200'>Edit</button>
                                     <button onClick={()=>deleteDocument(document.id)} className="outline-none w-fit px-4 py-1.5 bg-gradient-to-bl from-rose-500 to-rose-600 text-white rounded-lg shadow hover:shadow-lg transition-all duration-200">Delete</button>
                                 </div>
                             </div>
@@ -188,6 +239,19 @@ export default function DoctorDetails() {
 
     return (
         <div className="w-screen px-20 py-5">
+            {showDocumentModal && (
+                <DocumentModal
+                    document={document}
+                    setDocument={setDocument}
+                    handleChange={handleChangeDocument}
+                    postSubmit={fetchDoctorDetails}
+                    setLoading={setLoading}
+                    setShowDocumentModal={setShowDocumentModal}
+                    handleCancel={handleCancelDocument}
+                    isEditing={true}
+                    apiUrl={apiUrl}
+                />
+            )}
             {showDoctorModal && (
                 <DoctorModal
                     doctor={doctorDetails}
@@ -197,6 +261,19 @@ export default function DoctorDetails() {
                     isEditing={true}
                 />
             )}
+
+            {showAppointmentModal && 
+                <AppointmentModal 
+                    appointment={appointment} 
+                    setAppointment = {setAppointment}
+                    handleChange={handleChangeAppointment} 
+                    handleCancel={handleCancelAppointment} 
+                    setLoading={setLoading}
+                    setShowAppointmentModal={setShowAppointmentModal}
+                    postSubmit = {fetchDoctorDetails}
+                    isEditing={false} 
+                    apiUrl={apiUrl} 
+                />}
             {doctorDetails && (
                 <section className="flex flex-col gap-4">
                     <div className="flex justify-between items-start">
@@ -208,15 +285,21 @@ export default function DoctorDetails() {
                             <p>{doctorDetails.location}</p>
                             <p>₹ {doctorDetails.fees}</p>
                         </div>
-                        <div className="flex gap-6 items-center">
-                            <button className="outline-none w-fit px-4 py-1.5 bg-gradient-to-bl hover:shadow-lg transition-all duration-200 hover:text-white rounded-lg hover:bg-blue-600 shadow"
-                                onClick={() => setShowDoctorModal(true)}>
-                                Edit
-                            </button>
-                            <button className="outline-none w-fit px-4 py-1.5 bg-gradient-to-bl hover:shadow-lg transition-all duration-200 hover:text-white rounded-lg hover:bg-rose-600 shadow"
-                                onClick={() => deleteDoctor(id)}>
-                                Delete
-                            </button>
+                        <div className="flex flex-col gap-2 items-center">
+                            <div className="flex gap-6 ">
+                                <button className="outline-none w-fit px-4 py-1.5 bg-gradient-to-bl from-sky-600 to-blue-600 text-white rounded-lg shadow hover:shadow-lg transition-all duration-200"
+                                    onClick={() => setShowDoctorModal(true)}>
+                                    Edit Doctor
+                                </button>
+                                <button className="outline-none w-fit px-4 py-1.5 bg-gradient-to-bl from-rose-500 to-rose-600 text-white rounded-lg shadow hover:shadow-lg transition-all duration-200"
+                                    onClick={() => deleteDoctor(id)}>
+                                    Delete Doctor
+                                </button>
+                            </div>
+                            <div className="flex gap-6">
+                            <button onClick={(e) => handleAppointmentAddition(e)} className='capitalize outline-none w-fit px-4 py-1.5 bg-gradient-to-bl from-sky-500 to-blue-500 text-white rounded-lg shadow hover:shadow-lg transition-all duration-200'>Add appointment</button>
+                            <button onClick={(e) => handleDocumentAddition(e)} className='capitalize outline-none w-fit px-4 py-1.5 bg-gradient-to-bl from-sky-500 to-blue-500 text-white rounded-lg shadow hover:shadow-lg transition-all duration-200'>Add report / prescription</button>
+                            </div>
                         </div>
                     </div>
                     <div className="flex justify-between gap-20">

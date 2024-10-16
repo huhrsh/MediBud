@@ -8,7 +8,7 @@ export default function AppointmentHome() {
     const { loading, setLoading, apiUrl } = useContext(AppContext);
     const [pastAppointments, setPastAppointments] = useState([]);
     const [upcomingAppointments, setUpcomingAppointments] = useState([]);
-    const [appointment, setAppointment] = useState({ doctorID: null, date: '', time: '' });
+    const [appointment, setAppointment] = useState({ doctorID: null, issue: '', documents: [], date: '', time: '' });
     const [searchQuery, setSearchQuery] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
     const [showAppointmentModal, setShowAppointmentModal] = useState(false);
@@ -142,7 +142,7 @@ export default function AppointmentHome() {
                         className="flex-grow rounded-full pl-2 py-2.5 outline-none text-lg text-neutral-600"
                     />
                 </div>
-                <button 
+                <button
                     className='outline-none w-fit px-4 py-1.5 bg-gradient-to-r from-sky-500 to-blue-600 text-white rounded-lg shadow hover:shadow-lg transition-all duration-200'
                     onClick={() => setShowAppointmentModal(!showAppointmentModal)}
                 >
@@ -151,28 +151,28 @@ export default function AppointmentHome() {
             </div>
 
             {/* Appointment Modal */}
-            {showAppointmentModal && 
-                <AppointmentModal 
-                    appointment={appointment} 
-                    handleChange={handleChange} 
-                    handleSubmit={addAppointment} 
-                    handleCancel={handleCancel} 
-                    isEditing={false} 
-                    apiUrl={apiUrl} 
+            {showAppointmentModal &&
+                <AppointmentModal
+                    appointment={appointment}
+                    handleChange={handleChange}
+                    handleSubmit={addAppointment}
+                    handleCancel={handleCancel}
+                    isEditing={false}
+                    apiUrl={apiUrl}
                 />}
 
             {/* Appointment Lists */}
             <div className='flex justify-between gap-20'>
                 {/* Upcoming Appointments */}
-                <AppointmentList 
-                    title="Upcoming Appointments" 
-                    appointments={upcomingAppointments} 
+                <AppointmentList
+                    title="Upcoming Appointments"
+                    appointments={upcomingAppointments}
                 />
 
                 {/* Past Appointments */}
-                <AppointmentList 
-                    title="Past Appointments" 
-                    appointments={pastAppointments} 
+                <AppointmentList
+                    title="Past Appointments"
+                    appointments={pastAppointments}
                 />
             </div>
         </div>

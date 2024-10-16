@@ -18,60 +18,60 @@ export default function ReportHome() {
         description: null
     })
 
-    const addReport = async (e) => {
-        setLoading(true);
-        e.preventDefault();
-        const token = localStorage.getItem('jwtToken');
-        const formData = new FormData();
-        formData.append('type', document.type || toString("report"));
-        formData.append('file', document.file);
-        formData.append('date', new Date(document.date));
-        if (document.injury) {
-            formData.append('injury', document.injury);
-        }
-        if (document.description) {
-            formData.append('description', document.description);
-        }
-        formData.append('doctorID', document.doctorID || document?.doctor?.id);
+    // const addReport = async (e) => {
+    //     setLoading(true);
+    //     e.preventDefault();
+    //     const token = localStorage.getItem('jwtToken');
+    //     const formData = new FormData();
+    //     formData.append('type', document.type || toString("report"));
+    //     formData.append('file', document.file);
+    //     formData.append('date', new Date(document.date));
+    //     if (document.injury) {
+    //         formData.append('injury', document.injury);
+    //     }
+    //     if (document.description) {
+    //         formData.append('description', document.description);
+    //     }
+    //     formData.append('doctorID', document.doctorID || document?.doctor?.id);
 
-        try {
-            if (document.id) {
-                const response = await fetch(`${apiUrl}documents/${document.id}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: formData
-                });
-                const data = await response.json();
-                console.log(data);
-            }
-            else {
-                const response = await fetch(`${apiUrl}documents`, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                    },
-                    body: formData,
-                });
-                const addedReport = await response.json();
-                console.log(addedReport);
-            }
-            fetchReports();
-            setDocument({
-                doctorID: null,
-                type: "report",
-                file: null,
-                date: null,
-                injury: null,
-                description: null
-            });
-            setShowReportModal(false);
-        } catch (error) {
-            console.error('Error adding report:', error);
-        }
-        setLoading(false);
-    };
+    //     try {
+    //         if (document.id) {
+    //             const response = await fetch(`${apiUrl}documents/${document.id}`, {
+    //                 method: 'PUT',
+    //                 headers: {
+    //                     'Authorization': `Bearer ${token}`
+    //                 },
+    //                 body: formData
+    //             });
+    //             const data = await response.json();
+    //             console.log(data);
+    //         }
+    //         else {
+    //             const response = await fetch(`${apiUrl}documents`, {
+    //                 method: 'POST',
+    //                 headers: {
+    //                     'Authorization': `Bearer ${token}`,
+    //                 },
+    //                 body: formData,
+    //             });
+    //             const addedReport = await response.json();
+    //             console.log(addedReport);
+    //         }
+    //         fetchReports();
+    //         setDocument({
+    //             doctorID: null,
+    //             type: "report",
+    //             file: null,
+    //             date: null,
+    //             injury: null,
+    //             description: null
+    //         });
+    //         setShowReportModal(false);
+    //     } catch (error) {
+    //         console.error('Error adding report:', error);
+    //     }
+    //     setLoading(false);
+    // };
 
     const deleteDocument = async (id) => {
         setLoading(true);
@@ -186,8 +186,12 @@ export default function ReportHome() {
             {showReportModal &&
                 <DocumentModal
                     document={document}
+                    setDocument={setDocument}
                     handleChange={handleChange}
-                    handleSubmit={addReport}
+                    postSubmit={fetchReports}
+                    setLoading={setLoading}
+                    setShowDocumentModal={setShowReportModal}
+                    // handleSubmit={addReport}
                     handleCancel={handleCancel}
                     isEditing={false}
                     apiUrl={apiUrl}

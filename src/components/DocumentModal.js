@@ -1,7 +1,62 @@
 import React, { useState, useEffect } from 'react';
 import tick from "../assets/images/accept.png"
 
-export default function DocumentModal({ document, handleChange, handleSubmit, handleCancel, apiUrl }) {
+export default function DocumentModal({ document, setDocument, handleChange, setLoading, postSubmit, setShowDocumentModal, handleCancel, apiUrl }) {
+
+    const handleSubmit = async (e) => {
+        setLoading(true);
+        e.preventDefault();
+        const token = localStorage.getItem('jwtToken');
+        const formData = new FormData();
+        formData.append('type', document.type || toString("report"));
+        formData.append('file', document.file);
+        formData.append('date', new Date(document.date));
+        if (document.injury) {
+            formData.append('injury', document.injury);
+        }
+        if (document.description) {
+            formData.append('description', document.description);
+        }
+        formData.append('doctorID', document.doctorID || document?.doctor?.id);
+
+        try {
+            if (document.id) {
+                const response = await fetch(`${apiUrl}documents/${document.id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: formData
+                });
+                const data = await response.json();
+                console.log(data);
+            }
+            else {
+                const response = await fetch(`${apiUrl}documents`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                    },
+                    body: formData,
+                });
+                const addedReport = await response.json();
+            }
+            postSubmit();
+            setDocument({
+                doctorID: null,
+                type: null,
+                file: null,
+                date: null,
+                injury: null,
+                description: null
+            });
+            setShowDocumentModal(false);
+        } catch (error) {
+            console.error('Error adding report:', error);
+        }
+        setLoading(false);
+    };
+
     const [doctors, setDoctors] = useState([]);
 
     useEffect(() => {
