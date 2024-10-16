@@ -1,6 +1,7 @@
 import { useContext, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { AppContext } from "../AppContext";
+import AppointmentModal from "../components/AppointmentModal";
 
 export default function AppointmentDetails() {
     const { id } = useParams();
@@ -10,13 +11,16 @@ export default function AppointmentDetails() {
     const [doctorDetails, setDoctorDetails] = useState(null);
     const [appointmentDate, setAppointmentDate] = useState('');
     const [appointmentTime, setAppointmentTime] = useState('');
+    const [appointmentIssue, setAppointmentIssue] = useState('');
+    const [appointment, setAppointment] = useState({});
+    const [showAppointmentModal, setShowAppointmentModal] = useState(false);
 
     const navigate = useNavigate();
 
-    const fetchAppointmentDetails = async (appointmentId) => {
+    const fetchAppointmentDetails = async () => {
         setLoading(true);
         try {
-            const response = await fetch(`${apiUrl}appointments/${appointmentId}`, {
+            const response = await fetch(`${apiUrl}appointments/${id}`, {
                 method: "GET",
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('jwtToken')}`,
@@ -29,11 +33,18 @@ export default function AppointmentDetails() {
             }
 
             const data = await response.json();
-            console.log(data);
+            setAppointment({
+                id: data.id,
+                doctorID: data.doctor.id,
+                issue: data.issue,
+                date: data.date,
+                time: data.time
+            });
             setReports(data.reports);
             setPrescriptions(data.prescriptions);
             setDoctorDetails(data.doctor);
             setAppointmentDate(data.date);
+            setAppointmentIssue(data.issue);
             setAppointmentTime(data.time);
         } catch (error) {
             console.error('Error fetching appointment details:', error);
@@ -77,12 +88,37 @@ export default function AppointmentDetails() {
         return `${adjustedHours}:${String(minutes).padStart(2, '0')} ${period}`;
     };
 
+    function handleUpdateClick() {
+        setShowAppointmentModal(true);
+    }
+
+    const handleChangeAppointment = (e) => {
+        const { name, value } = e.target;
+        setAppointment((prev) => ({ ...prev, [name]: value }));
+    };
+
+    const handleCancelAppointment = () => {
+        setShowAppointmentModal(false);
+        setAppointment({ doctorID: id, date: '', time: '' });
+    }
 
     return (
         <>
             {
                 !loading &&
                 <div className="w-screen flex justify-between items-start px-20 py-5">
+                    {showAppointmentModal &&
+                        <AppointmentModal
+                            appointment={appointment}
+                            setAppointment={setAppointment}
+                            handleChange={handleChangeAppointment}
+                            handleCancel={handleCancelAppointment}
+                            setLoading={setLoading}
+                            setShowAppointmentModal={setShowAppointmentModal}
+                            postSubmit={fetchAppointmentDetails}
+                            isEditing={false}
+                            apiUrl={apiUrl}
+                        />}
                     <div className="flex flex-col gap-2">
                         <div>
                             <h2 className="text-blue-600 font-semibold text-lg">{formatDate(appointmentDate)} | {formatTime(appointmentTime)}</h2>
@@ -95,6 +131,7 @@ export default function AppointmentDetails() {
                                     </div>
                                     <p className="text-neutral-600">{doctorDetails.location}</p>
                                     <p className="text-neutral-600">₹{doctorDetails.fees}</p>
+                                    <p className="text-neutral-600">{appointmentIssue}</p>
                                 </div>
                             )}
                         </div>
@@ -120,7 +157,10 @@ export default function AppointmentDetails() {
                             </div>
                         </div>
                     </div>
-                    <button className="outline-none w-fit px-4 py-1.5 bg-gradient-to-bl hover:shadow-lg transition-all duration-200 hover:text-white rounded-lg hover:bg-rose-600 shadow" onClick={deleteAppointment}>Delete</button>
+                    <div className="flex gap-6 items-center justify-between">
+                        <button className="outline-none w-fit px-4 py-1.5 bg-gradient-to-bl from-sky-500 to-blue-500 text-white rounded-lg shadow hover:shadow-lg transition-all duration-200" onClick={() => { handleUpdateClick() }}>Edit</button>
+                        <button className="outline-none w-fit px-4 py-1.5 bg-gradient-to-bl from-rose-500 to-rose-600 text-white rounded-lg shadow hover:shadow-lg transition-all duration-200" onClick={deleteAppointment}>Delete</button>
+                    </div>
                 </div>
 
             }

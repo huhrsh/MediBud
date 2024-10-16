@@ -8,7 +8,14 @@ export default function AppointmentHome() {
     const { loading, setLoading, apiUrl } = useContext(AppContext);
     const [pastAppointments, setPastAppointments] = useState([]);
     const [upcomingAppointments, setUpcomingAppointments] = useState([]);
-    const [appointment, setAppointment] = useState({ doctorID: null, issue: '', documents: [], date: '', time: '' });
+    const [appointment, setAppointment] = useState(
+        {
+            doctorID: null,
+            issue: '',
+            date: '',
+            time: ''
+        }
+    );
     const [searchQuery, setSearchQuery] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
     const [showAppointmentModal, setShowAppointmentModal] = useState(false);
@@ -39,25 +46,25 @@ export default function AppointmentHome() {
         fetchAppointments();
     }, [searchTerm]);
 
-    const addAppointment = async (e) => {
-        e.preventDefault();
-        const token = localStorage.getItem('jwtToken');
-        try {
-            const response = await fetch(`${apiUrl}appointments`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(appointment),
-            });
-            const addedAppointment = await response.json();
-            setAppointment({ doctorID: null, date: '', time: '' });  // Reset form
-            setShowAppointmentModal(false);
-        } catch (error) {
-            console.error('Error adding appointment:', error);
-        }
-    };
+    // const addAppointment = async (e) => {
+    //     e.preventDefault();
+    //     const token = localStorage.getItem('jwtToken');
+    //     try {
+    //         const response = await fetch(`${apiUrl}appointments`, {
+    //             method: 'POST',
+    //             headers: {
+    //                 'Authorization': `Bearer ${token}`,
+    //                 'Content-Type': 'application/json',
+    //             },
+    //             body: JSON.stringify(appointment),
+    //         });
+    //         const addedAppointment = await response.json();
+    //         setAppointment({ doctorID: null, date: '', time: '' });  // Reset form
+    //         setShowAppointmentModal(false);
+    //     } catch (error) {
+    //         console.error('Error adding appointment:', error);
+    //     }
+    // };
 
     const debounce = (func, delay) => {
         let timer;
@@ -114,6 +121,7 @@ export default function AppointmentHome() {
                                     <p className="text-blue-600 font-semibold text-lg">{formatDate(appointment.date)} | {formatTime(appointment.time)}</p>
                                     <p className='text-neutral-800 font-normal'>{appointment.doctor.name} ({appointment.doctor.specialty})</p>
                                 </div>
+                                {appointment.issue}
                                 <div className='flex text-base justify-between'>
                                     <span className='text-neutral-600'>{appointment.doctor.location}</span>
                                     <span className='text-neutral-600'>₹{appointment.doctor.fees}</span>
@@ -154,10 +162,13 @@ export default function AppointmentHome() {
             {showAppointmentModal &&
                 <AppointmentModal
                     appointment={appointment}
+                    setAppointment={setAppointment}
                     handleChange={handleChange}
-                    handleSubmit={addAppointment}
+                    setLoading={setLoading}
+                    postSubmit={fetchAppointments}
+                    setShowAppointmentModal={setShowAppointmentModal}
+                    // handleSubmit={addAppointment}
                     handleCancel={handleCancel}
-                    isEditing={false}
                     apiUrl={apiUrl}
                 />}
 

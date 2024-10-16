@@ -92,7 +92,7 @@ export default function DocumentModal({ document, setDocument, handleChange, set
     const isEditMode = !!document.id; 
 
     return (
-        <div className='absolute z-20 w-screen h-screen top-0 left-0 bg-white bg-opacity-70 flex items-center justify-center animate__animated animate__fadeInDown animate__fast'>
+        <div className='fixed z-20 w-screen h-screen top-0 left-0 bg-white bg-opacity-70 flex items-center justify-center animate__animated animate__fadeInDown animate__fast'>
             <form className='border grid grid-cols-1 w-[36vw] bg-white grid-flow-row gap-3 rounded-2xl p-6' onSubmit={handleSubmit}>
                 <h2 className='font-bold text-3xl text-blue-500 text-transparent bg-clip-text bg-gradient-to-b from-sky-500 to-blue-600'>
                     {isEditMode ? 'Edit Document Details' : 'Enter Document Details'}

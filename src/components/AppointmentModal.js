@@ -5,19 +5,32 @@ export default function AppointmentModal({ appointment, setAppointment,setLoadin
 
     let isEditing= !!appointment.id;
 
+
     const handleSubmit = async (e) => {
-        setLoading(true);
         e.preventDefault();
+        setLoading(true);
         const token = localStorage.getItem('jwtToken');
+        // setAppointment((appointment)=>(
+        //     {
+        //         doctorID:toString(appointment.doctorID),
+        //         issue: appointment.issue,
+        //         date:appointment.date,
+        //         time:appointment.time
+        // }))
         try {
             if (isEditing) {
-                const response = await fetch(`${apiUrl}appointments/${document.id}`, {
+                const response = await fetch(`${apiUrl}appointments/${appointment.id}`, {
                     method: 'PUT',
                     headers: {
                         'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify(appointment)
+                    body: JSON.stringify({
+                        doctorID:parseInt(appointment.doctor.id),
+                        issue: appointment.issue,
+                        date:appointment.date,
+                        time:appointment.time
+                })
                 });
                 const data = await response.json();
                 console.log(data);
@@ -31,9 +44,11 @@ export default function AppointmentModal({ appointment, setAppointment,setLoadin
                     },
                     body: JSON.stringify(appointment),
                 });
+                const data = await response.json();
+                console.log(data);
             }
             postSubmit();
-            setAppointment({ doctorID: null, date: '', time: '' });  
+            setAppointment({ doctorID: null, date: '', time: '', issue:'' });  
             setShowAppointmentModal(false);
         } catch (error) {
             console.error('Error adding appointment:', error);
@@ -65,13 +80,14 @@ export default function AppointmentModal({ appointment, setAppointment,setLoadin
     }, [apiUrl]);
 
     const fields = [
+        { label: 'Issue', placeholder: 'Enter issue', name: 'issue', type: 'text' },
         { label: 'Date', placeholder: 'Enter date', name: 'date', type: 'date' },
         { label: 'Time', placeholder: 'Enter time', name: 'time', type: 'time' },
     ];
 
     return (
-        <div className='absolute w-screen z-30 h-screen top-0 left-0 bg-white bg-opacity-70 flex items-center justify-center animate__animated animate__fadeInDown animate__fast'>
-            <form className='border grid grid-cols-1 w-[36vw] bg-white grid-flow-row gap-3 rounded-2xl p-6' onSubmit={handleSubmit}>
+        <div className='fixed w-screen z-30 h-screen top-0 left-0 bg-white bg-opacity-70 flex items-center justify-center animate__animated animate__fadeInDown animate__fast'>
+            <form className='border grid grid-cols-1 w-[36vw] bg-white grid-flow-row gap-3 rounded-2xl p-6' onSubmit={(e)=>handleSubmit(e)}>
                 <h2 className='font-bold text-3xl text-blue-500 text-transparent bg-clip-text bg-gradient-to-b from-sky-500 to-blue-600'>
                     {isEditing ? 'Edit Appointment' : 'Enter Appointment Details'}
                 </h2>
@@ -84,7 +100,7 @@ export default function AppointmentModal({ appointment, setAppointment,setLoadin
                     <select
                         className="outline-none text-neutral-700 w-full"
                         name="doctorID"
-                        value={appointment.doctorID}
+                        value={parseInt(appointment.doctor.id)}
                         onChange={handleChange}
                         required
                     >

@@ -17,7 +17,14 @@ export default function DoctorDetails() {
     const [upcomingAppointments, setUpcomingAppointments] = useState([]);
     const [showAppointmentModal, setShowAppointmentModal] = useState(false);
 
-    const [appointment, setAppointment] = useState({ doctorID: id, issue: '', documents:[], date: '', time: '' });
+    const [appointment, setAppointment] = useState(
+        {
+            doctorID: id,
+            issue: '',
+            date: '',
+            time: ''
+        }
+    );
     const navigate = useNavigate();
 
 
@@ -47,9 +54,9 @@ export default function DoctorDetails() {
                 setLoading(false);
                 return;
             }
-            
+
             const data = await response.json();
-            if(data && user && data?.doctor?.user?.id !== user?.id){
+            if (data && user && data?.doctor?.user?.id !== user?.id) {
                 toast.error("Unauthorized.");
                 setLoading(false);
                 navigate(-1);
@@ -104,6 +111,11 @@ export default function DoctorDetails() {
             console.error('Error deleting doctor:', error);
         }
     };
+
+    function handleDocumentEditClick(document) {
+        setDocument(document);
+        setShowDocumentModal(true);
+    }
 
     const handleCancel = () => setShowDoctorModal(false);
     const handleCancelDocument = () => setShowDocumentModal(false);
@@ -168,20 +180,42 @@ export default function DoctorDetails() {
         setAppointment({ doctorID: id, date: '', time: '' });
     }
 
-    function handleDocumentAddition(e){
+    function handleDocumentAddition(e) {
         e.preventDefault();
-        setDocument((document)=>({...document, doctorID:id}));
+        setDocument((document) => ({ ...document, doctorID: id }));
         setShowDocumentModal(true);
     }
 
-    function handleAppointmentAddition(e){
+    function handleAppointmentAddition(e) {
         e.preventDefault();
-        setAppointment((appointment)=>({...appointment, doctorID:id}));
+        setAppointment((appointment) => ({ ...appointment, doctorID: id }));
         setShowAppointmentModal(true);
     }
 
-    function handleDocumentUpdate(e){
-        e.preventDefault();
+    function handleAppointmentUpdate(appointment){
+        console.log(appointment)
+        setAppointment((appointment) =>({...appointment, doctorID:id}))
+        setAppointment(appointment);
+        setShowAppointmentModal(true);
+    }
+
+    async function deleteAppointment(id) {
+        setLoading(true);
+        try {
+            const response = await fetch(`${apiUrl}appointments/${id}`, {
+                method: "DELETE",
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('jwtToken')}`,
+                    "Content-Type": "application/json",
+                },
+            });
+            if (!response.ok) throw new Error('Failed to delete appointment');
+            const data = await response.text();
+            console.log(data);
+        } catch (error) {
+            console.error('Error deleting appointment:', error);
+        }
+        setLoading(false);
     }
 
     const renderAppointmentList = (appointments, title) => (
@@ -190,10 +224,18 @@ export default function DoctorDetails() {
             {appointments.length > 0 ?
                 <div className="p-2 max-h-96 overflow-y-scroll w-4/5 flex flex-col gap-2">
                     {appointments?.map((appointment) => (
-                        <Link to={`/appointments/${appointment.id}`} className="shadow border items-center justify-between flex rounded-lg py-1.5 px-4" key={appointment.id}>
-                            <p>{formatDate(appointment.date)}</p>
-                            <p>{formatTime(appointment.time)}</p>
-                        </Link>
+                        <div className="relative group overflow-hidden shadow border flex-col flex rounded-lg py-1.5 px-4" key={appointment.id}>
+                            <div className="flex items-center justify-between">
+                            <p className="text-blue-600 font-semibold text-lg"> {formatTime(appointment.time)}</p>
+                            <p className="text-blue-600 font-semibold text-lg"> {formatDate(appointment.date)}</p>
+                            </div>
+                            <p>{appointment.issue}</p>
+                            <div className='absolute opacity-0 group-hover:opacity-100 transition-all duration-300 group-hover:top-0 overflow-hidden  top-[100%] w-full h-full group-hover:left-0 left-[0%] flex justify-center items-center gap-4 bg-neutral-50 bg-opacity-95'>
+                                    <Link to={`/appointments/${appointment.id}`} className='outline-none w-fit px-4 py-1.5 bg-gradient-to-bl from-sky-500 to-blue-500 text-white rounded-lg shadow hover:shadow-lg transition-all duration-200'>View</Link>
+                                    <button onClick={() => handleAppointmentUpdate(appointment)} className='outline-none w-fit px-4 py-1.5 bg-gradient-to-bl from-sky-600 to-blue-700 text-white rounded-lg shadow hover:shadow-lg transition-all duration-200'>Edit</button>
+                                    <button onClick={() => deleteAppointment(appointment.id)} className="outline-none w-fit px-4 py-1.5 bg-gradient-to-bl from-rose-500 to-rose-600 text-white rounded-lg shadow hover:shadow-lg transition-all duration-200">Delete</button>
+                                </div>
+                        </div>
                     ))}
                 </div>
                 :
@@ -224,8 +266,8 @@ export default function DoctorDetails() {
                                 </div>
                                 <div className='absolute transition-all duration-300 group-hover:top-0 overflow-hidden  top-[100%] w-0  group-hover:w-full h-full group-hover:left-0 left-[50%] flex justify-center items-center gap-4 bg-neutral-50 bg-opacity-95'>
                                     <button onClick={() => window.open(document.fileUrl, '_blank')} className='outline-none w-fit px-4 py-1.5 bg-gradient-to-bl from-sky-500 to-blue-500 text-white rounded-lg shadow hover:shadow-lg transition-all duration-200'>View</button>
-                                    <button onClick={(e)=> handleDocumentUpdate(e)} className='outline-none w-fit px-4 py-1.5 bg-gradient-to-bl from-sky-600 to-blue-700 text-white rounded-lg shadow hover:shadow-lg transition-all duration-200'>Edit</button>
-                                    <button onClick={()=>deleteDocument(document.id)} className="outline-none w-fit px-4 py-1.5 bg-gradient-to-bl from-rose-500 to-rose-600 text-white rounded-lg shadow hover:shadow-lg transition-all duration-200">Delete</button>
+                                    <button onClick={() => handleDocumentEditClick(document)} className='outline-none w-fit px-4 py-1.5 bg-gradient-to-bl from-sky-600 to-blue-700 text-white rounded-lg shadow hover:shadow-lg transition-all duration-200'>Edit</button>
+                                    <button onClick={() => deleteDocument(document.id)} className="outline-none w-fit px-4 py-1.5 bg-gradient-to-bl from-rose-500 to-rose-600 text-white rounded-lg shadow hover:shadow-lg transition-all duration-200">Delete</button>
                                 </div>
                             </div>
                         ))}
@@ -262,17 +304,17 @@ export default function DoctorDetails() {
                 />
             )}
 
-            {showAppointmentModal && 
-                <AppointmentModal 
-                    appointment={appointment} 
-                    setAppointment = {setAppointment}
-                    handleChange={handleChangeAppointment} 
-                    handleCancel={handleCancelAppointment} 
+            {showAppointmentModal &&
+                <AppointmentModal
+                    appointment={appointment}
+                    setAppointment={setAppointment}
+                    handleChange={handleChangeAppointment}
+                    handleCancel={handleCancelAppointment}
                     setLoading={setLoading}
                     setShowAppointmentModal={setShowAppointmentModal}
-                    postSubmit = {fetchDoctorDetails}
-                    isEditing={false} 
-                    apiUrl={apiUrl} 
+                    postSubmit={fetchDoctorDetails}
+                    isEditing={false}
+                    apiUrl={apiUrl}
                 />}
             {doctorDetails && (
                 <section className="flex flex-col gap-4">
@@ -285,29 +327,29 @@ export default function DoctorDetails() {
                             <p>{doctorDetails.location}</p>
                             <p>₹ {doctorDetails.fees}</p>
                         </div>
-                        <div className="flex flex-col gap-2 items-center">
-                            <div className="flex gap-6 ">
+                        <div className="flex justify-end gap-2 flex-col">
+                            <div className="flex gap-2 justify-end">
                                 <button className="outline-none w-fit px-4 py-1.5 bg-gradient-to-bl from-sky-600 to-blue-600 text-white rounded-lg shadow hover:shadow-lg transition-all duration-200"
                                     onClick={() => setShowDoctorModal(true)}>
                                     Edit Doctor
                                 </button>
+                                <button onClick={(e) => handleDocumentAddition(e)} className='capitalize outline-none w-fit px-4 py-1.5 bg-gradient-to-bl from-sky-500 to-blue-500 text-white rounded-lg shadow hover:shadow-lg transition-all duration-200'>Add report / prescription</button>
+                            </div>
+                            <div className="flex gap-2 justify-end">
                                 <button className="outline-none w-fit px-4 py-1.5 bg-gradient-to-bl from-rose-500 to-rose-600 text-white rounded-lg shadow hover:shadow-lg transition-all duration-200"
                                     onClick={() => deleteDoctor(id)}>
                                     Delete Doctor
                                 </button>
-                            </div>
-                            <div className="flex gap-6">
-                            <button onClick={(e) => handleAppointmentAddition(e)} className='capitalize outline-none w-fit px-4 py-1.5 bg-gradient-to-bl from-sky-500 to-blue-500 text-white rounded-lg shadow hover:shadow-lg transition-all duration-200'>Add appointment</button>
-                            <button onClick={(e) => handleDocumentAddition(e)} className='capitalize outline-none w-fit px-4 py-1.5 bg-gradient-to-bl from-sky-500 to-blue-500 text-white rounded-lg shadow hover:shadow-lg transition-all duration-200'>Add report / prescription</button>
+                                <button onClick={(e) => handleAppointmentAddition(e)} className='capitalize outline-none w-fit px-4 py-1.5 bg-gradient-to-bl from-sky-500 to-blue-500 text-white rounded-lg shadow hover:shadow-lg transition-all duration-200'>Add appointment</button>
                             </div>
                         </div>
                     </div>
-                    <div className="flex justify-between gap-20">
+                    <div className="flex justify-between gap-0">
                         {renderAppointmentList(upcomingAppointments, "Upcoming Appointments")}
                         {renderAppointmentList(pastAppointments, "Past Appointments")}
                     </div>
 
-                    <div className="flex justify-between gap-20">
+                    <div className="flex justify-between gap-0">
                         <DocumentList documents={reports} title="Reports" />
                         <DocumentList documents={prescriptions} title="Prescriptions" />
                     </div>
