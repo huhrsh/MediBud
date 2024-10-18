@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import tick from "../assets/images/accept.png"
+import { toast } from 'react-toastify';
 
 export default function DocumentModal({ document, setDocument, handleChange, setLoading, postSubmit, setShowDocumentModal, handleCancel, apiUrl }) {
 
@@ -28,8 +29,8 @@ export default function DocumentModal({ document, setDocument, handleChange, set
                     },
                     body: formData
                 });
+                toast.success("Document updated.");
                 const data = await response.json();
-                console.log(data);
             }
             else {
                 const response = await fetch(`${apiUrl}documents`, {
@@ -39,6 +40,7 @@ export default function DocumentModal({ document, setDocument, handleChange, set
                     },
                     body: formData,
                 });
+                toast.success("Document created.");
                 const addedReport = await response.json();
             }
             postSubmit();
@@ -56,6 +58,19 @@ export default function DocumentModal({ document, setDocument, handleChange, set
         }
         setLoading(false);
     };
+
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (e.key === 'Escape') {
+                setShowDocumentModal(false);
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [setShowDocumentModal]);
 
     const [doctors, setDoctors] = useState([]);
 

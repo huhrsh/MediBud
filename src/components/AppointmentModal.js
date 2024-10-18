@@ -1,22 +1,22 @@
 import React, { useState, useEffect } from 'react';
+import { toast } from 'react-toastify';
 
 export default function AppointmentModal({ appointment, setAppointment,setLoading, handleChange, postSubmit, setShowAppointmentModal, handleCancel, apiUrl }) {
     const [doctors, setDoctors] = useState([]);
 
     let isEditing= !!appointment.id;
 
+    if(appointment.doctorID && typeof appointment.doctorID =='string'){
+        setAppointment((appointment)=>({...appointment, doctorID:parseInt(appointment.doctorID)}))
+    }
+    else if(appointment.doctor && !appointment.doctorID){
+        setAppointment((appointment)=>({...appointment, doctorID: parseInt(appointment.doctor.id)}))
+    }
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
         const token = localStorage.getItem('jwtToken');
-        // setAppointment((appointment)=>(
-        //     {
-        //         doctorID:toString(appointment.doctorID),
-        //         issue: appointment.issue,
-        //         date:appointment.date,
-        //         time:appointment.time
-        // }))
         try {
             if (isEditing) {
                 const response = await fetch(`${apiUrl}appointments/${appointment.id}`, {
@@ -33,7 +33,7 @@ export default function AppointmentModal({ appointment, setAppointment,setLoadin
                 })
                 });
                 const data = await response.json();
-                console.log(data);
+                toast.success("Appointment updated.");
             }
             else{
                 const response = await fetch(`${apiUrl}appointments`, {
@@ -45,7 +45,7 @@ export default function AppointmentModal({ appointment, setAppointment,setLoadin
                     body: JSON.stringify(appointment),
                 });
                 const data = await response.json();
-                console.log(data);
+                toast.success("Appointment created.");
             }
             postSubmit();
             setAppointment({ doctorID: null, date: '', time: '', issue:'' });  
@@ -79,6 +79,20 @@ export default function AppointmentModal({ appointment, setAppointment,setLoadin
         fetchDoctors();
     }, [apiUrl]);
 
+    
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (e.key === 'Escape') {
+                setShowAppointmentModal(false);
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [setShowAppointmentModal]);
+
     const fields = [
         { label: 'Issue', placeholder: 'Enter issue', name: 'issue', type: 'text' },
         { label: 'Date', placeholder: 'Enter date', name: 'date', type: 'date' },
@@ -100,7 +114,7 @@ export default function AppointmentModal({ appointment, setAppointment,setLoadin
                     <select
                         className="outline-none text-neutral-700 w-full"
                         name="doctorID"
-                        value={parseInt(appointment.doctor.id)}
+                        value={appointment?.doctorID}
                         onChange={handleChange}
                         required
                     >

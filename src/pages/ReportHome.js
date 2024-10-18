@@ -165,68 +165,72 @@ export default function ReportHome() {
     };
 
     return (
-        <div className="w-screen flex flex-col px-20 py-5">
-            {/* Search Input */}
-            <div className="flex justify-between items-center mb-6">
-                <div className="flex justify-between items-center px-4 pl-2 rounded-full w-5/12 border border-neutral-300 hover:shadow-md transition-all duration-200">
-                    <img className="h-7" src={searchImage} alt="search" />
-                    <input
-                        type="text"
-                        placeholder="Search doctor, location, or injury"
-                        value={searchQuery}
-                        onChange={onSearchInputChange}
-                        className="flex-grow rounded-full pl-2 py-2.5 outline-none text-lg text-neutral-600"
-                    />
-                </div>
-                <button className='outline-none w-fit px-4 py-1.5 bg-gradient-to-r from-sky-500 to-blue-600 text-white rounded-lg shadow hover:shadow-lg transition-all duration-200'
-                    onClick={() => setShowReportModal(!showReportModal)}>Add report</button>
-            </div>
-
-            {/* Modal to add report */}
-            {showReportModal &&
-                <DocumentModal
-                    document={document}
-                    setDocument={setDocument}
-                    handleChange={handleChange}
-                    postSubmit={fetchReports}
-                    setLoading={setLoading}
-                    setShowDocumentModal={setShowReportModal}
-                    // handleSubmit={addReport}
-                    handleCancel={handleCancel}
-                    isEditing={false}
-                    apiUrl={apiUrl}
-                />}
-
-            {/* Report List */}
-            <div className="flex flex-col gap-4 pl-4">
-                {reports?.map((report, index) => (
-                    <div key={index} className="group flex justify-between transition-all duration-300">
-                        <div className='w-3/5 flex justify-between border p-2 px-4 rounded-lg shadow-sm hover:shadow-md transition-all duration-300'>
-                            <div className="flex flex-col">
-                                <p className="text-blue-600 font-semibold text-lg">{formatDate(report.date)}</p>
-                                <div>
-                                    <div className="flex gap-1 text-neutral-600"><h5 className="text-neutral-700 font-medium">Issue:</h5> {report.injury ?? "Not specified."}</div>
-                                    <div className="flex gap-1 text-neutral-600"><h5 className="text-neutral-700 font-medium">Description:</h5> {report.description ?? "Not specified."}</div>
-                                </div>
-                            </div>
-                            <div className='flex justify-end'>
-                                <div className='flex flex-col items-end'>
-                                    <p className="text-neutral-800 font-normal">{report.doctor.name} ({report.doctor.specialty})</p>
-                                    <span>{report.doctor.location}, ₹{report.doctor.fees}</span>
-                                </div>
-                            </div>
+        <>
+            {!loading &&
+                <div className="w-screen flex flex-col px-20 py-5">
+                    {/* Search Input */}
+                    <div className="flex justify-between items-center mb-6">
+                        <div className="flex justify-between items-center px-4 pl-2 rounded-full w-5/12 border border-neutral-300 hover:shadow-md transition-all duration-200">
+                            <img className="h-7" src={searchImage} alt="search" />
+                            <input
+                                type="text"
+                                placeholder="Search doctor, location, or injury"
+                                value={searchQuery}
+                                onChange={onSearchInputChange}
+                                className="flex-grow rounded-full pl-2 py-2.5 outline-none text-lg text-neutral-600"
+                            />
                         </div>
-                        <div className='relative w-2/5'>
-                            <div className='flex absolute top-0 left-0 transition-all duration-300 justify-center gap-4 items-center bg-opacity-90 group-hover:w-72 w-0 h-full overflow-hidden '>
-                                <button onClick={() => window.open(report.fileUrl, '_blank')} className='outline-none w-fit px-4 py-1.5 bg-gradient-to-bl from-sky-500 to-blue-500 text-white rounded-lg shadow hover:shadow-lg transition-all duration-200'>View</button>
-                                <button onClick={() => { handleUpdateClick(report) }} className='outline-none w-fit px-4 py-1.5 bg-gradient-to-bl from-sky-600 to-blue-700 text-white rounded-lg shadow hover:shadow-lg transition-all duration-200'>Edit</button>
-                                <button onClick={() => deleteDocument(report.id)} className="outline-none w-fit px-4 py-1.5 bg-gradient-to-bl from-rose-500 to-rose-600 text-white rounded-lg shadow hover:shadow-lg transition-all duration-200">Delete</button>
-                                {/* <button onClick={()=>{deleteDocument(report.id)}} className="outline-none w-fit px-4 py-1.5 bg-gradient-to-bl hover:shadow-lg transition-all duration-200 hover:text-white rounded-lg hover:bg-rose-600 shadow">Delete</button> */}
-                            </div>
-                        </div>
+                        <button className='outline-none w-fit px-4 py-1.5 bg-gradient-to-r from-sky-500 to-blue-600 text-white rounded-lg shadow hover:shadow-lg transition-all duration-200'
+                            onClick={() => setShowReportModal(!showReportModal)}>Add report</button>
                     </div>
-                ))}
-            </div>
-        </div>
+
+                    {/* Modal to add report */}
+                    {showReportModal &&
+                        <DocumentModal
+                            document={document}
+                            setDocument={setDocument}
+                            handleChange={handleChange}
+                            postSubmit={fetchReports}
+                            setLoading={setLoading}
+                            setShowDocumentModal={setShowReportModal}
+                            // handleSubmit={addReport}
+                            handleCancel={handleCancel}
+                            isEditing={false}
+                            apiUrl={apiUrl}
+                        />}
+
+                    {/* Report List */}
+                    <div className="flex flex-col gap-4 pl-4">
+                        {reports?.map((report, index) => (
+                            <div key={index} className="group flex justify-between transition-all duration-300">
+                                <div className='w-3/5 flex justify-between border p-2 px-4 rounded-lg shadow-sm hover:shadow-md transition-all duration-300'>
+                                    <div className="flex flex-col">
+                                        <p className="text-blue-600 font-semibold text-lg">{formatDate(report.date)}</p>
+                                        <div>
+                                            <div className="flex gap-1 text-neutral-600"><h5 className="text-neutral-700 font-medium">Issue:</h5> {report.injury ?? "Not specified."}</div>
+                                            <div className="flex gap-1 text-neutral-600"><h5 className="text-neutral-700 font-medium">Description:</h5> {report.description ?? "Not specified."}</div>
+                                        </div>
+                                    </div>
+                                    <div className='flex justify-end'>
+                                        <div className='flex flex-col items-end'>
+                                            <p className="text-neutral-800 font-normal">{report.doctor.name} ({report.doctor.specialty})</p>
+                                            <span>{report.doctor.location}, ₹{report.doctor.fees}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className='relative w-2/5'>
+                                    <div className='flex absolute top-0 left-0 transition-all duration-300 justify-center gap-4 items-center bg-opacity-90 group-hover:w-72 w-0 h-full overflow-hidden '>
+                                        <button onClick={() => window.open(report.fileUrl, '_blank')} className='outline-none w-fit px-4 py-1.5 bg-gradient-to-bl from-sky-500 to-blue-500 text-white rounded-lg shadow hover:shadow-lg transition-all duration-200'>View</button>
+                                        <button onClick={() => { handleUpdateClick(report) }} className='outline-none w-fit px-4 py-1.5 bg-gradient-to-bl from-sky-600 to-blue-700 text-white rounded-lg shadow hover:shadow-lg transition-all duration-200'>Edit</button>
+                                        <button onClick={() => deleteDocument(report.id)} className="outline-none w-fit px-4 py-1.5 bg-gradient-to-bl from-rose-500 to-rose-600 text-white rounded-lg shadow hover:shadow-lg transition-all duration-200">Delete</button>
+                                        {/* <button onClick={()=>{deleteDocument(report.id)}} className="outline-none w-fit px-4 py-1.5 bg-gradient-to-bl hover:shadow-lg transition-all duration-200 hover:text-white rounded-lg hover:bg-rose-600 shadow">Delete</button> */}
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            }
+        </>
     );
 }

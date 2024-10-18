@@ -12,8 +12,8 @@ export default function SignIn() {
     const {user, setUser, loading, setLoading, apiUrl} = useContext(AppContext);
 
     const [formData, setFormData] = useState({
-        email: "mailtoharshjain@gmail.com",
-        password: "12345678",
+        email: "",
+        password: "",
     });
 
     useEffect(()=>{
@@ -45,6 +45,7 @@ export default function SignIn() {
             toast.warn("All fields are required.");
             return;
         }
+
         setLoading(true);
         const response = await fetch(`${apiUrl}auth/login`, {
             method: "POST",

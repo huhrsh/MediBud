@@ -1,13 +1,26 @@
 // DoctorModal.jsx
-import React from 'react';
+import React, { useEffect } from 'react';
 
-export default function DoctorModal({ doctor, handleChange, handleSubmit, handleCancel, isEditing }) {
+export default function DoctorModal({ doctor, handleChange, setShowDoctorModal, handleSubmit, handleCancel, isEditing }) {
     const fields = [
         { label: 'Doctor Name', placeholder: 'Enter name', name: 'name', type: 'text' },
         { label: 'Specialty', placeholder: 'Enter specialty', name: 'specialty', type: 'text' },
         { label: 'Fees', placeholder: 'Enter fees', name: 'fees', type: 'number' },
         { label: 'Location', placeholder: 'Enter location', name: 'location', type: 'text' },
     ];
+
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (e.key === 'Escape') {
+                setShowDoctorModal(false);
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [setShowDoctorModal]);
 
     return (
         <div className='fixed z-30 w-screen h-screen top-0 left-0 bg-white bg-opacity-70 flex items-center justify-center animate__animated animate__fadeInDown animate__fast'>

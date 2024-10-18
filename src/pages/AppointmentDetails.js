@@ -2,10 +2,11 @@ import { useContext, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { AppContext } from "../AppContext";
 import AppointmentModal from "../components/AppointmentModal";
+import { toast } from "react-toastify";
 
 export default function AppointmentDetails() {
     const { id } = useParams();
-    const { loading, setLoading, apiUrl } = useContext(AppContext);
+    const { loading, setLoading, user,  apiUrl } = useContext(AppContext);
     const [reports, setReports] = useState([]);
     const [prescriptions, setPrescriptions] = useState([]);
     const [doctorDetails, setDoctorDetails] = useState(null);
@@ -27,25 +28,31 @@ export default function AppointmentDetails() {
                     "Content-Type": "application/json",
                 },
             });
-            if (!response.ok) {
-                navigate(-1);
-                return;
+            if (response.status === 403) {
+                toast.error("Unauthorized")
+                navigate('/');
+            }
+            else if (response.status === 404) {
+                toast.error("Appointment does not exist.")
+                navigate('/');
+            }
+            else{
+                const data = await response.json();
+                setAppointment({
+                    id: data.id,
+                    doctorID: data.doctor.id,
+                    issue: data.issue,
+                    date: data.date,
+                    time: data.time
+                });
+                setReports(data.reports);
+                setPrescriptions(data.prescriptions);
+                setDoctorDetails(data.doctor);
+                setAppointmentDate(data.date);
+                setAppointmentIssue(data.issue);
+                setAppointmentTime(data.time);
             }
 
-            const data = await response.json();
-            setAppointment({
-                id: data.id,
-                doctorID: data.doctor.id,
-                issue: data.issue,
-                date: data.date,
-                time: data.time
-            });
-            setReports(data.reports);
-            setPrescriptions(data.prescriptions);
-            setDoctorDetails(data.doctor);
-            setAppointmentDate(data.date);
-            setAppointmentIssue(data.issue);
-            setAppointmentTime(data.time);
         } catch (error) {
             console.error('Error fetching appointment details:', error);
         }

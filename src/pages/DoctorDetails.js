@@ -5,6 +5,7 @@ import DoctorModal from "../components/DoctorModal";
 import { toast } from "react-toastify";
 import DocumentModal from "../components/DocumentModal";
 import AppointmentModal from "../components/AppointmentModal";
+import warning from "../assets/images/warning (1).png"
 
 export default function DoctorDetails() {
     const { id } = useParams();
@@ -16,6 +17,7 @@ export default function DoctorDetails() {
     const [pastAppointments, setPastAppointments] = useState([]);
     const [upcomingAppointments, setUpcomingAppointments] = useState([]);
     const [showAppointmentModal, setShowAppointmentModal] = useState(false);
+    const [deleteDoctorModal, setDeleteDoctorModal] = useState(false);
 
     const [appointment, setAppointment] = useState(
         {
@@ -41,32 +43,35 @@ export default function DoctorDetails() {
     const fetchDoctorDetails = async () => {
         setLoading(true);
         try {
+            const jwtToken = localStorage.getItem('jwtToken')
             const response = await fetch(`${apiUrl}doctors/${id}`, {
                 method: "GET",
                 headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('jwtToken')}`,
+                    'Authorization': `Bearer ${jwtToken}`,
                     "Content-Type": "application/json",
                 },
             });
 
-            if (!response.ok) {
-                navigate(-1);
+            if (response.status===403) {
+                toast.error("Unauthorized.")
+                navigate('/');
                 setLoading(false);
-                return;
             }
+            else {
+                const data = await response.json();
+                // if (data && user && data?.doctor?.user?.id !== user?.id) {
+                //     toast.error("Unauthorized.");
+                //     setLoading(false);
+                //     navigate(-1);
+                //     return;
+                // }
+                setReports(data.reports);
+                setPastAppointments(data.pastAppointments);
+                setUpcomingAppointments(data.upcomingAppointments);
+                setPrescriptions(data.prescriptions);
+                setDoctorDetails(data.doctor);
 
-            const data = await response.json();
-            if (data && user && data?.doctor?.user?.id !== user?.id) {
-                toast.error("Unauthorized.");
-                setLoading(false);
-                navigate(-1);
-                return;
             }
-            setReports(data.reports);
-            setPastAppointments(data.pastAppointments);
-            setUpcomingAppointments(data.upcomingAppointments);
-            setPrescriptions(data.prescriptions);
-            setDoctorDetails(data.doctor);
         } catch (error) {
             console.error('Error fetching doctor details:', error);
         }
@@ -86,9 +91,16 @@ export default function DoctorDetails() {
                 },
                 body: JSON.stringify(doctorDetails),
             });
-
-            const updatedDoctor = await response.json();
-            setDoctorDetails(updatedDoctor);
+            if (response.status===403) {
+                toast.error("Unauthorized.")
+                setLoading(false);
+                navigate('/');
+            }
+            else{
+                const updatedDoctor = await response.json();
+                setDoctorDetails(updatedDoctor);
+                toast.success("Doctor updated.")
+            }
             setShowDoctorModal(false);
         } catch (error) {
             console.error('Error updating doctor:', error);
@@ -96,20 +108,30 @@ export default function DoctorDetails() {
         setLoading(false);
     };
 
-    const deleteDoctor = async (id) => {
+    const deleteDoctor = async () => {
+        setLoading(true);
         const token = localStorage.getItem('jwtToken');
         try {
-            await fetch(`${apiUrl}doctors/${id}`, {
+            const response = await fetch(`${apiUrl}doctors/${id}`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json',
                 },
             });
-            navigate(-1);
+            if (response.status===403) {
+                toast.error("Unauthorized.")
+                navigate('/');
+                setLoading(false);
+            }
+            
+            toast.success("Doctor deleted.")
+            navigate("/doctors");
+            setLoading(false);
         } catch (error) {
             console.error('Error deleting doctor:', error);
         }
+        setLoading(false);
     };
 
     function handleDocumentEditClick(document) {
@@ -161,8 +183,8 @@ export default function DoctorDetails() {
                 }
             });
             if (response.ok) {
-                console.log(await response.text());
-                fetchDoctorDetails(id);
+                toast.success("Document deleted.");
+                fetchDoctorDetails();
             }
         } catch (error) {
             console.error('Error deleting document:', error);
@@ -192,9 +214,8 @@ export default function DoctorDetails() {
         setShowAppointmentModal(true);
     }
 
-    function handleAppointmentUpdate(appointment){
-        console.log(appointment)
-        setAppointment((appointment) =>({...appointment, doctorID:id}))
+    function handleAppointmentUpdate(appointment) {
+        setAppointment((appointment) => ({ ...appointment, doctorID: id }))
         setAppointment(appointment);
         setShowAppointmentModal(true);
     }
@@ -209,9 +230,10 @@ export default function DoctorDetails() {
                     "Content-Type": "application/json",
                 },
             });
-            if (!response.ok) throw new Error('Failed to delete appointment');
-            const data = await response.text();
-            console.log(data);
+            if (!response.ok) {
+                fetchDoctorDetails();
+                toast.success("Appointment deleted.");
+            };
         } catch (error) {
             console.error('Error deleting appointment:', error);
         }
@@ -226,15 +248,15 @@ export default function DoctorDetails() {
                     {appointments?.map((appointment) => (
                         <div className="relative group overflow-hidden shadow border flex-col flex rounded-lg py-1.5 px-4" key={appointment.id}>
                             <div className="flex items-center justify-between">
-                            <p className="text-blue-600 font-semibold text-lg"> {formatTime(appointment.time)}</p>
-                            <p className="text-blue-600 font-semibold text-lg"> {formatDate(appointment.date)}</p>
+                                <p className="text-blue-600 font-semibold text-lg"> {formatTime(appointment.time)}</p>
+                                <p className="text-blue-600 font-semibold text-lg"> {formatDate(appointment.date)}</p>
                             </div>
                             <p>{appointment.issue}</p>
                             <div className='absolute opacity-0 group-hover:opacity-100 transition-all duration-300 group-hover:top-0 overflow-hidden  top-[100%] w-full h-full group-hover:left-0 left-[0%] flex justify-center items-center gap-4 bg-neutral-50 bg-opacity-95'>
-                                    <Link to={`/appointments/${appointment.id}`} className='outline-none w-fit px-4 py-1.5 bg-gradient-to-bl from-sky-500 to-blue-500 text-white rounded-lg shadow hover:shadow-lg transition-all duration-200'>View</Link>
-                                    <button onClick={() => handleAppointmentUpdate(appointment)} className='outline-none w-fit px-4 py-1.5 bg-gradient-to-bl from-sky-600 to-blue-700 text-white rounded-lg shadow hover:shadow-lg transition-all duration-200'>Edit</button>
-                                    <button onClick={() => deleteAppointment(appointment.id)} className="outline-none w-fit px-4 py-1.5 bg-gradient-to-bl from-rose-500 to-rose-600 text-white rounded-lg shadow hover:shadow-lg transition-all duration-200">Delete</button>
-                                </div>
+                                <Link to={`/appointments/${appointment.id}`} className='outline-none w-fit px-4 py-1.5 bg-gradient-to-bl from-sky-500 to-blue-500 text-white rounded-lg shadow hover:shadow-lg transition-all duration-200'>View</Link>
+                                <button onClick={() => handleAppointmentUpdate(appointment)} className='outline-none w-fit px-4 py-1.5 bg-gradient-to-bl from-sky-600 to-blue-700 text-white rounded-lg shadow hover:shadow-lg transition-all duration-200'>Edit</button>
+                                <button onClick={() => deleteAppointment(appointment.id)} className="outline-none w-fit px-4 py-1.5 bg-gradient-to-bl from-rose-500 to-rose-600 text-white rounded-lg shadow hover:shadow-lg transition-all duration-200">Delete</button>
+                            </div>
                         </div>
                     ))}
                 </div>
@@ -278,84 +300,116 @@ export default function DoctorDetails() {
         );
     };
 
+    const DeleteDoctorModal = ()=>(
+        <div className="bg-white bg-opacity-70 fixed w-screen h-screen top-0 left-0 z-40 flex items-center justify-center">
+            <div className="bg-white w-1/3 flex flex-col border p-4 rounded-lg shadow gap-3">
+            <div className="flex w-full justify-center items-center gap-2">
+                <img className="h-7" src={warning} alt="warning" /> 
+                <h5 className="text-amber-500 font-bold text-2xl uppercase">Warning</h5>
+                </div>
+                <p className="text-neutral-600 text-lg">
+                    Deleting the doctor will delete all appointments, reports and prescriptions linked to it.
+                    <br/>
+                    <br/>
+                     Are you sure you want to proceed?
+                </p>
+                <div className="flex justify-between items-center">
+                    <button className="outline-none w-fit px-4 py-1.5 bg-gradient-to-bl from-sky-500 to-blue-600 text-white rounded-lg shadow hover:shadow-lg transition-all duration-200" onClick={()=>deleteDoctor()}>Delete</button>
+                    <button className="outline-none w-fit px-4 py-1.5 bg-gradient-to-bl from-rose-500 to-rose-600 text-white rounded-lg shadow hover:shadow-lg transition-all duration-200" onClick={()=>setDeleteDoctorModal(false)}>Cancel</button>
+                </div>
+            </div>
+        </div>
+    )
+
 
     return (
-        <div className="w-screen px-20 py-5">
-            {showDocumentModal && (
-                <DocumentModal
-                    document={document}
-                    setDocument={setDocument}
-                    handleChange={handleChangeDocument}
-                    postSubmit={fetchDoctorDetails}
-                    setLoading={setLoading}
-                    setShowDocumentModal={setShowDocumentModal}
-                    handleCancel={handleCancelDocument}
-                    isEditing={true}
-                    apiUrl={apiUrl}
-                />
-            )}
-            {showDoctorModal && (
-                <DoctorModal
-                    doctor={doctorDetails}
-                    handleChange={handleChange}
-                    handleSubmit={handleDoctorUpdate}
-                    handleCancel={handleCancel}
-                    isEditing={true}
-                />
-            )}
+        <>
+            {!loading &&
+                <div className="w-screen px-20 py-5">
 
-            {showAppointmentModal &&
-                <AppointmentModal
-                    appointment={appointment}
-                    setAppointment={setAppointment}
-                    handleChange={handleChangeAppointment}
-                    handleCancel={handleCancelAppointment}
-                    setLoading={setLoading}
-                    setShowAppointmentModal={setShowAppointmentModal}
-                    postSubmit={fetchDoctorDetails}
-                    isEditing={false}
-                    apiUrl={apiUrl}
-                />}
-            {doctorDetails && (
-                <section className="flex flex-col gap-4">
-                    <div className="flex justify-between items-start">
-                        <div>
-                            <h3 className="leading-snug font-semibold text-xl text-blue-500 text-transparent bg-clip-text bg-gradient-to-b from-sky-500 to-blue-600">
-                                {doctorDetails.name}
-                            </h3>
-                            <p>{doctorDetails.specialty}</p>
-                            <p>{doctorDetails.location}</p>
-                            <p>₹ {doctorDetails.fees}</p>
-                        </div>
-                        <div className="flex justify-end gap-2 flex-col">
-                            <div className="flex gap-2 justify-end">
-                                <button className="outline-none w-fit px-4 py-1.5 bg-gradient-to-bl from-sky-600 to-blue-600 text-white rounded-lg shadow hover:shadow-lg transition-all duration-200"
-                                    onClick={() => setShowDoctorModal(true)}>
-                                    Edit Doctor
-                                </button>
-                                <button onClick={(e) => handleDocumentAddition(e)} className='capitalize outline-none w-fit px-4 py-1.5 bg-gradient-to-bl from-sky-500 to-blue-500 text-white rounded-lg shadow hover:shadow-lg transition-all duration-200'>Add report / prescription</button>
+                    {
+                        deleteDoctorModal &&
+                        <DeleteDoctorModal/>
+                    }
+
+                    {showDocumentModal && (
+                        <DocumentModal
+                            document={document}
+
+                            setDocument={setDocument}
+                            handleChange={handleChangeDocument}
+                            postSubmit={fetchDoctorDetails}
+                            setLoading={setLoading}
+                            setShowDocumentModal={setShowDocumentModal}
+                            handleCancel={handleCancelDocument}
+                            isEditing={true}
+                            apiUrl={apiUrl}
+                        />
+                    )}
+                    {showDoctorModal && (
+                        <DoctorModal
+                            doctor={doctorDetails}
+                            handleChange={handleChange}
+                            handleSubmit={handleDoctorUpdate}
+                            handleCancel={handleCancel}
+                            isEditing={true}
+                        />
+                    )}
+
+                    {showAppointmentModal &&
+                        <AppointmentModal
+                            appointment={appointment}
+                            setAppointment={setAppointment}
+                            handleChange={handleChangeAppointment}
+                            handleCancel={handleCancelAppointment}
+                            setLoading={setLoading}
+                            setShowAppointmentModal={setShowAppointmentModal}
+                            postSubmit={fetchDoctorDetails}
+                            isEditing={false}
+                            apiUrl={apiUrl}
+                        />}
+                    {doctorDetails && (
+                        <section className="flex flex-col gap-4">
+                            <div className="flex justify-between items-start">
+                                <div>
+                                    <h3 className="leading-snug font-semibold text-xl text-blue-500 text-transparent bg-clip-text bg-gradient-to-b from-sky-500 to-blue-600">
+                                        {doctorDetails.name}
+                                    </h3>
+                                    <p>{doctorDetails.specialty}</p>
+                                    <p>{doctorDetails.location}</p>
+                                    <p>₹ {doctorDetails.fees}</p>
+                                </div>
+                                <div className="flex justify-end gap-2 flex-col">
+                                    <div className="flex gap-2 justify-end">
+                                        <button className="outline-none w-fit px-4 py-1.5 bg-gradient-to-bl from-sky-600 to-blue-600 text-white rounded-lg shadow hover:shadow-lg transition-all duration-200"
+                                            onClick={() => setShowDoctorModal(true)}>
+                                            Edit Doctor
+                                        </button>
+                                        <button onClick={(e) => handleDocumentAddition(e)} className='capitalize outline-none w-fit px-4 py-1.5 bg-gradient-to-bl from-sky-500 to-blue-500 text-white rounded-lg shadow hover:shadow-lg transition-all duration-200'>Add report / prescription</button>
+                                    </div>
+                                    <div className="flex gap-2 justify-end">
+                                        <button className="outline-none w-fit px-4 py-1.5 bg-gradient-to-bl from-rose-500 to-rose-600 text-white rounded-lg shadow hover:shadow-lg transition-all duration-200"
+                                            onClick={() => setDeleteDoctorModal(true)}>
+                                            Delete Doctor
+                                        </button>
+                                        <button onClick={(e) => handleAppointmentAddition(e)} className='capitalize outline-none w-fit px-4 py-1.5 bg-gradient-to-bl from-sky-500 to-blue-500 text-white rounded-lg shadow hover:shadow-lg transition-all duration-200'>Add appointment</button>
+                                    </div>
+                                </div>
                             </div>
-                            <div className="flex gap-2 justify-end">
-                                <button className="outline-none w-fit px-4 py-1.5 bg-gradient-to-bl from-rose-500 to-rose-600 text-white rounded-lg shadow hover:shadow-lg transition-all duration-200"
-                                    onClick={() => deleteDoctor(id)}>
-                                    Delete Doctor
-                                </button>
-                                <button onClick={(e) => handleAppointmentAddition(e)} className='capitalize outline-none w-fit px-4 py-1.5 bg-gradient-to-bl from-sky-500 to-blue-500 text-white rounded-lg shadow hover:shadow-lg transition-all duration-200'>Add appointment</button>
+                            <div className="flex justify-between gap-0">
+                                {renderAppointmentList(upcomingAppointments, "Upcoming Appointments")}
+                                {renderAppointmentList(pastAppointments, "Past Appointments")}
                             </div>
-                        </div>
-                    </div>
-                    <div className="flex justify-between gap-0">
-                        {renderAppointmentList(upcomingAppointments, "Upcoming Appointments")}
-                        {renderAppointmentList(pastAppointments, "Past Appointments")}
-                    </div>
 
-                    <div className="flex justify-between gap-0">
-                        <DocumentList documents={reports} title="Reports" />
-                        <DocumentList documents={prescriptions} title="Prescriptions" />
-                    </div>
+                            <div className="flex justify-between gap-0">
+                                <DocumentList documents={reports} title="Reports" />
+                                <DocumentList documents={prescriptions} title="Prescriptions" />
+                            </div>
 
-                </section>
-            )}
-        </div>
+                        </section>
+                    )}
+                </div>
+            }
+        </>
     );
 }

@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 export const AppContext = createContext();
 
 export const AppProvider = ({ children }) => {
-    const [loading, setLoading] = useState(false);  // Loading state
+    const [loading, setLoading] = useState(true);  // Loading state
     const [user, setUser] = useState(null);  // User information
     const apiUrl = 'http://localhost:8000/api/';
 
@@ -19,10 +19,7 @@ export const AppProvider = ({ children }) => {
         if (response.ok) {
             const user = await response.json();
             setUser(user);
-            // console.log("User info:", user);
-        } else {
-            console.error("Invalid token");
-        }
+        } 
         setLoading(false);
     }
 
@@ -30,6 +27,9 @@ export const AppProvider = ({ children }) => {
         const jwtToken = localStorage.getItem("jwtToken");
         if (jwtToken) {
             getUserWithJWT(jwtToken);
+        }
+        else{
+            setLoading(false);
         }
     }, [])
 

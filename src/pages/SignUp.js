@@ -12,10 +12,10 @@ export default function SignUp() {
     const {user, loading, setLoading, apiUrl} = useContext(AppContext);
 
     const [formData, setFormData] = useState({
-        name: "Harsh",
-        email: "mailtoharshjain@gmail.com",
-        password: "12345678",
-        confirmPassword: "12345678"
+        name: "",
+        email: "",
+        password: "",
+        confirmPassword: ""
     });
 
     useEffect(()=>{
@@ -71,16 +71,19 @@ export default function SignUp() {
             toast.warn("Passwords do not match.");
             return;
         }
+        
         setLoading(true)
+        
         const response = await fetch(`${apiUrl}auth/register`, {
             method: "POST",
             headers: {
                 'Content-Type': 'application/json'  
             },
+            credentials:'omit',
             body: JSON.stringify({
                 username: formData.name,
                 email: formData.email,
-                password: formData.password
+                password: formData.password 
             })
         });
         

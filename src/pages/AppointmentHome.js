@@ -46,25 +46,6 @@ export default function AppointmentHome() {
         fetchAppointments();
     }, [searchTerm]);
 
-    // const addAppointment = async (e) => {
-    //     e.preventDefault();
-    //     const token = localStorage.getItem('jwtToken');
-    //     try {
-    //         const response = await fetch(`${apiUrl}appointments`, {
-    //             method: 'POST',
-    //             headers: {
-    //                 'Authorization': `Bearer ${token}`,
-    //                 'Content-Type': 'application/json',
-    //             },
-    //             body: JSON.stringify(appointment),
-    //         });
-    //         const addedAppointment = await response.json();
-    //         setAppointment({ doctorID: null, date: '', time: '' });  // Reset form
-    //         setShowAppointmentModal(false);
-    //     } catch (error) {
-    //         console.error('Error adding appointment:', error);
-    //     }
-    // };
 
     const debounce = (func, delay) => {
         let timer;
@@ -137,55 +118,60 @@ export default function AppointmentHome() {
     };
 
     return (
-        <div className='w-screen flex flex-col px-20 py-5'>
-            {/* Search and Add Appointment Button */}
-            <div className='flex justify-between items-center mb-6'>
-                <div className='flex justify-between items-center px-4 pl-2 rounded-full w-5/12 border border-neutral-300 hover:shadow-md transition-all duration-200'>
-                    <img className='h-7' src={searchImage} alt='search' />
-                    <input
-                        type="text"
-                        placeholder="Search doctor, location, or specialty"
-                        value={searchQuery}
-                        onChange={onSearchInputChange}
-                        className="flex-grow rounded-full pl-2 py-2.5 outline-none text-lg text-neutral-600"
+        <>
+        {
+            !loading &&
+            <div className='w-screen flex flex-col px-20 py-5'>
+                {/* Search and Add Appointment Button */}
+                <div className='flex justify-between items-center mb-6'>
+                    <div className='flex justify-between items-center px-4 pl-2 rounded-full w-5/12 border border-neutral-300 hover:shadow-md transition-all duration-200'>
+                        <img className='h-7' src={searchImage} alt='search' />
+                        <input
+                            type="text"
+                            placeholder="Search doctor, location, or specialty"
+                            value={searchQuery}
+                            onChange={onSearchInputChange}
+                            className="flex-grow rounded-full pl-2 py-2.5 outline-none text-lg text-neutral-600"
+                        />
+                    </div>
+                    <button
+                        className='outline-none w-fit px-4 py-1.5 bg-gradient-to-r from-sky-500 to-blue-600 text-white rounded-lg shadow hover:shadow-lg transition-all duration-200'
+                        onClick={() => setShowAppointmentModal(!showAppointmentModal)}
+                    >
+                        Add Appointment
+                    </button>
+                </div>
+
+                {/* Appointment Modal */}
+                {showAppointmentModal &&
+                    <AppointmentModal
+                        appointment={appointment}
+                        setAppointment={setAppointment}
+                        handleChange={handleChange}
+                        setLoading={setLoading}
+                        postSubmit={fetchAppointments}
+                        setShowAppointmentModal={setShowAppointmentModal}
+                        // handleSubmit={addAppointment}
+                        handleCancel={handleCancel}
+                        apiUrl={apiUrl}
+                    />}
+
+                {/* Appointment Lists */}
+                <div className='flex justify-between gap-20'>
+                    {/* Upcoming Appointments */}
+                    <AppointmentList
+                        title="Upcoming Appointments"
+                        appointments={upcomingAppointments}
+                    />
+
+                    {/* Past Appointments */}
+                    <AppointmentList
+                        title="Past Appointments"
+                        appointments={pastAppointments}
                     />
                 </div>
-                <button
-                    className='outline-none w-fit px-4 py-1.5 bg-gradient-to-r from-sky-500 to-blue-600 text-white rounded-lg shadow hover:shadow-lg transition-all duration-200'
-                    onClick={() => setShowAppointmentModal(!showAppointmentModal)}
-                >
-                    Add Appointment
-                </button>
             </div>
-
-            {/* Appointment Modal */}
-            {showAppointmentModal &&
-                <AppointmentModal
-                    appointment={appointment}
-                    setAppointment={setAppointment}
-                    handleChange={handleChange}
-                    setLoading={setLoading}
-                    postSubmit={fetchAppointments}
-                    setShowAppointmentModal={setShowAppointmentModal}
-                    // handleSubmit={addAppointment}
-                    handleCancel={handleCancel}
-                    apiUrl={apiUrl}
-                />}
-
-            {/* Appointment Lists */}
-            <div className='flex justify-between gap-20'>
-                {/* Upcoming Appointments */}
-                <AppointmentList
-                    title="Upcoming Appointments"
-                    appointments={upcomingAppointments}
-                />
-
-                {/* Past Appointments */}
-                <AppointmentList
-                    title="Past Appointments"
-                    appointments={pastAppointments}
-                />
-            </div>
-        </div>
+        }
+        </>
     );
 }
